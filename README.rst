@@ -13,7 +13,7 @@ as serialization and storage logic in ognom are separated.
  
 Supports python2.6+, python3.3+, PyPy. 
 
-Documentation: http://ognom.readthedocs.org
+Documentation:  #TODO
 
 
 Install
@@ -47,7 +47,7 @@ Quickstart
     from ognom.fields import StringField, IntField
     
     ConnectionManager.connect({
-        'main': {  # ognom uses aliases for databases to make it possible to use multiple db's per project
+        'main': {  # ognom use aliases for databases to make it possible to use multiple db's per project
             'name': 'birzha_main',
             'args': ['127.0.0.1:27017'],
             'kwargs': {'socketTimeoutMS': 60000}},})
