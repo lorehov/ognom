@@ -12,6 +12,9 @@ branches:
         - master
         - develop
 
+services:
+    - mongodb
+
 install: pip install --quiet tox
 
 script: tox
