@@ -129,6 +129,21 @@ class FloatField(GenericField):
         return float(value)
 
 
+class DecimalField(GenericField):
+    def validate(self, value):
+        super(DecimalField, self).validate(value)
+        if not isinstance(value, Decimal):
+            raise ValidationError(
+                u"[{}] Can't convert {} of type {} to Decimal".format(
+                    self.name, value, type(value)), self.name)
+
+    def to_mongo(self, value):
+        return six.text_type(value)
+
+    def from_mongo(self, value):
+        return Decimal(value)
+
+
 class UUIDField(GenericField):
     def to_mongo(self, value):
         if isinstance(value, six.string_types):
