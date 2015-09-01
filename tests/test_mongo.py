@@ -613,7 +613,7 @@ class TestRepository(unittest.TestCase):
             field1='2', field2=dt2
         ))
 
-        with pytest.raises[DuplicateKeyError]:
+        with pytest.raises(DuplicateKeyError):
             self._TestModelRepository.create(dict(
                 field1='1', field2=dt
             ))
