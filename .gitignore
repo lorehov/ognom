@@ -1,0 +1,22 @@
+# common
+*.py[cod]
+.idea
+
+# Packages
+*.egg
+*.egg-info
+build
+dist
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+venv
+_tmp
+
+# Unit test / coverage reports
+.coverage
+.tox
