@@ -1,6 +1,7 @@
 # coding: utf8
 import uuid
 import unittest
+import inspect
 from decimal import Decimal
 from datetime import datetime, timedelta
 from collections import namedtuple
@@ -17,6 +18,7 @@ from ognom.fields import (
     StringField, ObjectIdField, DateTimeField, ValidationError, UUIDField,
     ListField, DictField, DocumentField, BooleanField, URLField, HTTPField,
     IntField, GenericField, DecimalField)
+from ognom._registry import documents_registry
 
 
 _ContactStatus = namedtuple(
@@ -316,6 +318,14 @@ class TestDocument(unittest.TestCase):
         td1 = TD(field1='test_string', field3='test_string')
         td1.validate()
         assert True
+
+    def test_should_be_registered_in_registry(self):
+        class Foo(BaseDoc):
+            bar = StringField()
+        class_fqn = '{}.{}'.format(
+            inspect.getmodule(Foo).__name__, Foo.__name__)
+        assert class_fqn in documents_registry
+        assert documents_registry[class_fqn] == Foo
 
 
 class TestRepository(unittest.TestCase):
@@ -921,3 +931,13 @@ class TestEmailValidator(unittest.TestCase):
         invalid_emails = ['email.r', '&&&abir@valg']
         for email in invalid_emails:
             assert not self.validator.validate(email)
+
+
+class TestDocumentField(unittest.TestCase):
+    def test_should_accept_document_class_as_model_class(self):
+        field = DocumentField(BaseDoc)
+        assert field.model_class == BaseDoc
+
+    def test_should_accept_string_as_model_class(self):
+        field = DocumentField('tests.test_mongo.BaseDoc')
+        assert field.model_class == BaseDoc

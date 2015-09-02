@@ -5,20 +5,22 @@ from bson import ObjectId
 from six import with_metaclass
 
 from ognom.fields import GenericField, ObjectIdField, ValidationError
+from ognom._registry import register_doc_class
 
 
 class MongoDocumentMeta(type):
     def __new__(cls, class_name, bases, dct):
         result_cls = type.__new__(cls, class_name, bases, dct)
+        register_doc_class(result_cls)
         result_cls._defaults = {}
         result_cls._choices = {}
         result_cls._required = set()
 
-        # Сделано для реализации наследования
+        # in order to support inheritance
         special_attrs = [
             ('_defaults', {}), ('_choices', {}), ('_required', set())]
         for field, default in special_attrs:
-            # Копируем у родителей значения специфических полей документа
+            # copy values of specific fields from parent
             for base in bases:
                 base_field_value = getattr(base, field, None)
                 if base_field_value is not None:

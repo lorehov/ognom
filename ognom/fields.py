@@ -5,9 +5,11 @@ import uuid
 import datetime
 from decimal import Decimal
 
-from dateutil import parser
-from bson import ObjectId
 import six
+from bson import ObjectId
+from dateutil import parser
+
+from ognom._registry import get_doc_class
 
 
 class ValidationError(Exception):
@@ -316,7 +318,11 @@ class DocumentField(GenericField):
                  validators=None):
         super(DocumentField, self).__init__(
             required, default, validators=validators)
-        self.model_class = model_class
+        if isinstance(model_class, six.string_types):
+            self._model_class_name = model_class
+            self._model_class = None
+        else:
+            self._model_class = model_class
 
     def validate(self, value):
         if not isinstance(value, self.model_class):
@@ -354,6 +360,12 @@ class DocumentField(GenericField):
         if value is not None and not isinstance(value, self.model_class):
             value = self.model_class(**value)
         return value
+
+    @property
+    def model_class(self):
+        if self._model_class is None:
+            self._model_class = get_doc_class(self._model_class_name)
+        return self._model_class
 
 
 class GenericDocumentField(GenericField):
