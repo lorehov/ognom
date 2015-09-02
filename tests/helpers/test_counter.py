@@ -1,4 +1,3 @@
-import inspect
 from unittest import TestCase
 
 from pymongo import MongoClient

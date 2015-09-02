@@ -1,4 +1,5 @@
 # coding: utf8
+from __future__ import unicode_literals
 from collections import namedtuple
 
 from bson import ObjectId
@@ -75,7 +76,7 @@ class BaseRepository(object):
                 cls._model_class.db_name)
             if not connection:
                 raise ConnectionFailure(
-                    u"No connection for {}".format(cls._model_class.db_name))
+                    'No connection for {}'.format(cls._model_class.db_name))
             cls.collection = getattr(
                 connection, cls._model_class.collection_name)
         return cls.collection
@@ -310,8 +311,8 @@ class Repository(BaseRepository):
                                 DateTimeField) or
                             not isinstance(index.expire_after_seconds, int)):
                         raise TypeError(
-                            u"Incorrect expire_after_seconds "
-                            u"assignment to collection")
+                            'Incorrect expire_after_seconds '
+                            'assignment to collection')
                 index_opts = {
                     'name': index.name,
                 }

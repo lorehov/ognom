@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import copy
 
 from bson import ObjectId
@@ -15,7 +16,7 @@ class MongoDocumentMeta(type):
 
         # Сделано для реализации наследования
         special_attrs = [
-            ("_defaults", {}), ("_choices", {}), ("_required", set())]
+            ('_defaults', {}), ('_choices', {}), ('_required', set())]
         for field, default in special_attrs:
             # Копируем у родителей значения специфических полей документа
             for base in bases:
@@ -88,7 +89,7 @@ class Document(with_metaclass(MongoDocumentMeta, object)):
         for required_field in self._required:
             if self._data.get(required_field) is None:
                 raise ValidationError(
-                    u"Field {} is missing".format(required_field),
+                    'Field {} is missing'.format(required_field),
                     required_field)
 
         for name, choices in self._choices.items():
@@ -96,7 +97,7 @@ class Document(with_metaclass(MongoDocumentMeta, object)):
                     self._data[name] is not None and
                     self._data[name] not in choices):
                 raise ValidationError(
-                    u"Field {} value {} is not included in {}".format(
+                    'Field {} value {} is not included in {}'.format(
                         name, self._data[name], choices))
 
         for name, value in self._data.items():
@@ -172,20 +173,20 @@ class Document(with_metaclass(MongoDocumentMeta, object)):
     def save(self):
         if self.objects:
             return self.objects.save(self)
-        raise NotImplemented(u'objects attribute was not specified')
+        raise NotImplemented('objects attribute was not specified')
 
     def remove(self):
         if self.objects:
             return self.objects.remove(self)
-        raise NotImplemented(u'objects attribute was not specified')
+        raise NotImplemented('objects attribute was not specified')
 
     def copy(self):
         data = copy.deepcopy(self._data)
-        data.pop("_id")
+        data.pop('_id')
         return self.__class__(**data)
 
     def __repr__(self):
-        return u'{self.__class__.__name__}:{self.id}'.format(self=self)
+        return '{self.__class__.__name__}:{self.id}'.format(self=self)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

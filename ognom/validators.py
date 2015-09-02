@@ -1,17 +1,18 @@
+from __future__ import unicode_literals
 import re
 
 
 class AbstractValidator(object):
-    MESSAGE = u'Abstract message'
+    MESSAGE = 'Abstract message'
 
     def validate(self, value):
         raise NotImplementedError(
-            u'validate method must be implemented for the class {}'.format(
+            'Validate method must be implemented for the class {}'.format(
                 self.__class__))
 
 
 class LengthValidator(AbstractValidator):
-    MESSAGE = u'Length of value for field "{field}" must be lte then {value}'
+    MESSAGE = 'Length of value for field "{field}" must be lte then {value}'
 
     def __init__(self, length):
         self.length = length
@@ -21,7 +22,7 @@ class LengthValidator(AbstractValidator):
 
 
 class EmailValidator(AbstractValidator):
-    MESSAGE = u'Value of the field "{field}" is not valid email: {value}'
+    MESSAGE = 'Value of the field "{field}" is not valid email: {value}'
     _EMAIL_REGEXP = re.compile(r'.+@.+\..+$', re.IGNORECASE)
 
     def validate(self, value):
@@ -29,7 +30,7 @@ class EmailValidator(AbstractValidator):
 
 
 class TimeValidator(AbstractValidator):
-    MESSAGE = u'Value of the field "{field}" is not valid "hh:mm": {value}'
+    MESSAGE = 'Value of the field "{field}" is not valid "hh:mm": {value}'
     _TIME_REGEXP = re.compile(r'^(\d{1,2}):(\d{1,2})$', re.IGNORECASE)
 
     def validate(self, value):
