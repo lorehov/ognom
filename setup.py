@@ -51,7 +51,7 @@ setup(
     install_requires=['pymongo', 'six'],
     cmdclass={'test': PyTest},
 
-    keywords='mongo pymongo orm odm',
+    keywords='mongo mongodb pymongo orm odm',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: MIT License',
