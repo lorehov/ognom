@@ -4,6 +4,7 @@ from ognom.base import Document
 from ognom.fields import DateTimeField
 
 
-class Document(Document):
+class DocWithLifeCycle(Document):
     created_at = DateTimeField(default=datetime.utcnow)
-    updated_at = DateTimeField(default=datetime.utcnow)
+    updated_at = DateTimeField()
+    deleted_at = DateTimeField()
