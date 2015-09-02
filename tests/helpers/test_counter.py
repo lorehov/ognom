@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from pymongo import MongoClient
 
-from ognom.mongo_counter import MongoCounter
+from ognom.helpers.counter import MongoCounter
 
 
 class TestMongoCounter(TestCase):

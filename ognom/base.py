@@ -301,15 +301,6 @@ class Document(with_metaclass(MongoDocumentMeta, object)):
             return self.objects.remove(self)
         raise NotImplemented(u'objects attribute was not specified')
 
-    def update(self, payload):
-        modified = False
-        for key, value in payload.items():
-            if self._data.get(key) != value:
-                self._data[key] = value
-                modified = True
-        if modified:
-            self.save()
-
     def copy(self):
         data = copy.deepcopy(self._data)
         data.pop("_id")
@@ -317,6 +308,22 @@ class Document(with_metaclass(MongoDocumentMeta, object)):
 
     def __repr__(self):
         return u'{self.__class__.__name__}:{self.id}'.format(self=self)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        if self.id is None:  # can't compare models without id's
+            return False
+        return self.id == other.id
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        if self.id is None:
+            raise TypeError('Documents without id are unhashable')
+        return hash(self.id)
 
     class DoesNotExist(Exception):
         pass

@@ -1,6 +1,7 @@
 # coding: utf8
 import uuid
 import unittest
+from decimal import Decimal
 from datetime import datetime, timedelta
 from collections import namedtuple
 
@@ -15,7 +16,7 @@ from ognom.base import (
 from ognom.fields import (
     StringField, ObjectIdField, DateTimeField, ValidationError, UUIDField,
     ListField, DictField, DocumentField, BooleanField, URLField, HTTPField,
-    IntField, GenericField)
+    IntField, GenericField, DecimalField)
 
 
 _ContactStatus = namedtuple(
@@ -732,6 +733,27 @@ class TestHTTPField(unittest.TestCase):
         ]
         for url in valid_urls:
             self.assertIsNone(self.field.validate(url))
+
+
+class TestDecimalField(unittest.TestCase):
+    def setUp(self):
+        self.field = DecimalField()
+
+    def test_should_convert_to_string_when_storing(self):
+        value = self.field.to_mongo(Decimal('3.14'))
+        assert value == '3.14'
+        value = self.field.to_mongo(Decimal('3.1415926535897932384'))
+        assert value == '3.1415926535897932384'
+
+    def test_should_restore_to_decimal(self):
+        value = self.field.from_mongo('3.14')
+        assert value == Decimal('3.14')
+        value = self.field.from_mongo('3.1415926535897932384')
+        assert value == Decimal('3.1415926535897932384')
+
+    def test_should_accept_only_decimal(self):
+        with pytest.raises(ValidationError):
+            self.field.validate(10)
 
 
 class TestInheritance(unittest.TestCase):
