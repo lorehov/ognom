@@ -64,7 +64,7 @@ class Collection(object):
         """
         Collection class. Stores/retrieves objects from database.
         :param db_name: name of the database;
-        :param coll_name: collection name, if empty will be populated with
+        :param collection_name: collection name, if empty will be populated with
             pluaralyzed class name;
         :param indexes: list of indexes.
         """
