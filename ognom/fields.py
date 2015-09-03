@@ -1,12 +1,15 @@
+from __future__ import unicode_literals
 import re
 import sys
 import uuid
 import datetime
 from decimal import Decimal
 
-from dateutil import parser
-from bson import ObjectId
 import six
+from bson import ObjectId
+from dateutil import parser
+
+from ognom._registry import get_doc_class
 
 
 class ValidationError(Exception):
@@ -66,8 +69,8 @@ class StringField(GenericField):
         super(StringField, self).validate(value)
         if value and not isinstance(value, six.string_types):
             raise ValidationError(
-                u"[{}]: String accepts only string values, "
-                u"{} of {} given!".format(
+                '[{}]: String accepts only string values, '
+                '{} of {} given!'.format(
                     self.name, value, type(value)), self.name)
 
     def jsonify(self, value):
@@ -88,7 +91,7 @@ class URLField(StringField):
         super(URLField, self).validate(value)
         if value and not self._URL_REGEX.match(value):
             raise ValidationError(
-                u"[{}] Invalid url {}".format(self.name, value), self.name)
+                '[{}] Invalid url {}'.format(self.name, value), self.name)
 
 
 class HTTPField(URLField):
@@ -108,7 +111,7 @@ class IntField(GenericField):
         super(IntField, self).validate(value)
         if value is not None and not isinstance(value, six.integer_types):
             raise ValidationError(
-                u"[{}] Couldn't convert {} to int".format(
+                '[{}] Couldn\'t convert {} to int'.format(
                     self.name, value), self.name)
 
     def to_mongo(self, value):
@@ -122,7 +125,7 @@ class FloatField(GenericField):
         super(FloatField, self).validate(value)
         if not isinstance(value, (float, Decimal, six.integer_types)):
             raise ValidationError(
-                u"[{}] Can't convert {} of type {} to float".format(
+                '[{}] Can\'t convert {} of type {} to float'.format(
                     self.name, value, type(value)), self.name)
 
     def to_mongo(self, value):
@@ -134,7 +137,7 @@ class DecimalField(GenericField):
         super(DecimalField, self).validate(value)
         if not isinstance(value, Decimal):
             raise ValidationError(
-                u"[{}] Can't convert {} of type {} to Decimal".format(
+                '[{}] Can\'t convert {} of type {} to Decimal'.format(
                     self.name, value, type(value)), self.name)
 
     def to_mongo(self, value):
@@ -154,7 +157,7 @@ class UUIDField(GenericField):
         super(UUIDField, self).validate(value)
         if not isinstance(value, uuid.UUID):
             raise ValidationError(
-                u"[{}] Cannot convert to UUID {}".format(
+                '[{}] Cannot convert to UUID {}'.format(
                     self.name, value), self.name)
 
     def jsonify(self, value):
@@ -166,7 +169,7 @@ class ObjectIdField(GenericField):
         super(ObjectIdField, self).validate(value)
         if not isinstance(value, ObjectId):
             raise ValidationError(
-                u"[{}] Invalid value for ObjectId {}".format(
+                '[{}] Invalid value for ObjectId {}'.format(
                     self.name, value), self.name)
 
     def to_mongo(self, value):
@@ -175,7 +178,7 @@ class ObjectIdField(GenericField):
                 return ObjectId(six.text_type(value))
             except Exception as ex:
                 raise ValidationError(
-                    u"[{}] Invalid value for ObjectId {}. Error: {}".format(
+                    '[{}] Invalid value for ObjectId {}. Error: {}'.format(
                         self.name, value, repr(ex)), self.name)
         return value
 
@@ -191,7 +194,7 @@ class DateTimeField(GenericField):
                 parser.parse(value)
             except Exception as ex:
                 raise ValidationError(
-                    u"[{}] Unable to convert {} to datetime: {}".format(
+                    '[{}] Unable to convert {} to datetime: {}'.format(
                         self.name, value, repr(ex)))
         return True
 
@@ -210,7 +213,7 @@ class DateTimeField(GenericField):
             return parser.parse(value)
         except ValueError as ex:
             raise ValidationError(
-                u"[{}] Unable to convert {} to datteime: {}".format(
+                '[{}] Unable to convert {} to datetime: {}'.format(
                     self.name, value, repr(ex)))
 
     def jsonify(self, value):
@@ -221,7 +224,7 @@ class BooleanField(GenericField):
     def validate(self, value):
         if not isinstance(value, bool):
             raise ValidationError(
-                u"[{}] Only bool value can be used".format(self.name),
+                '[{}] Only bool value can be used'.format(self.name),
                 self.name)
 
 
@@ -315,7 +318,11 @@ class DocumentField(GenericField):
                  validators=None):
         super(DocumentField, self).__init__(
             required, default, validators=validators)
-        self.model_class = model_class
+        if isinstance(model_class, six.string_types):
+            self._model_class_name = model_class
+            self._model_class = None
+        else:
+            self._model_class = model_class
 
     def validate(self, value):
         if not isinstance(value, self.model_class):
@@ -353,6 +360,12 @@ class DocumentField(GenericField):
         if value is not None and not isinstance(value, self.model_class):
             value = self.model_class(**value)
         return value
+
+    @property
+    def model_class(self):
+        if self._model_class is None:
+            self._model_class = get_doc_class(self._model_class_name)
+        return self._model_class
 
 
 class GenericDocumentField(GenericField):

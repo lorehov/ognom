@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+
 class MongoCounterError(Exception):
     pass
 
@@ -12,7 +15,7 @@ class MongoCounter(object):
             {'_id': self.counter_name}, {'value': 1})
         if not doc:
             raise MongoCounterError(
-                u'No such counter "{}" in {}'.format(
+                'No such counter "{}" in {}'.format(
                     self.counter_name, self.collection.full_name))
         return doc['value']
 
