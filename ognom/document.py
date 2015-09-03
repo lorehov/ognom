@@ -12,6 +12,9 @@ class MongoDocumentMeta(type):
     def __new__(cls, class_name, bases, dct):
         result_cls = type.__new__(cls, class_name, bases, dct)
         register_doc_class(result_cls)
+        if result_cls.objects is not None:
+            result_cls.objects.model_class = result_cls
+
         result_cls._defaults = {}
         result_cls._choices = {}
         result_cls._required = set()
@@ -42,11 +45,6 @@ class MongoDocumentMeta(type):
                     result_cls._required.add(name)
                 if value.default is not None:
                     result_cls._defaults[name] = value.default
-        result_cls.collection_name = class_name.lower()
-
-        col_name = result_cls._collection_name
-        if col_name and result_cls.collection_name != col_name:
-            result_cls.collection_name = col_name
         return result_cls
 
 
@@ -56,11 +54,6 @@ class Document(with_metaclass(MongoDocumentMeta, object)):
     _required = None
     _defaults = None
     _choices = None
-
-    db_name = None
-    _collection_name = None
-    collection_name = None
-    meta = {}
 
     objects = None  # repository can be injected here
 

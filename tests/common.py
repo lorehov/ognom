@@ -1,6 +1,6 @@
 from ognom.document import Document
+from ognom.collection import Collection
 
 
 class BaseDoc(Document):
-    db_name = 'main'
-    _collection_name = 'testmodel'
+    objects = Collection(db_name='main', collection_name='test_models')

@@ -5,6 +5,6 @@
 # TODO: remove this import
 from ognom.document import Document
 from ognom.connection import ConnectionManager
-from ognom.collection import Repository, inject_repositories
+from ognom.collection import Collection
 
 

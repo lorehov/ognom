@@ -11,7 +11,6 @@ from pymongo.errors import DuplicateKeyError
 from six import string_types
 
 from ognom.validators import EmailValidator
-from ognom.base import Repository, inject_repositories, ConnectionManager
 from ognom.fields import (
     StringField, ObjectIdField, DateTimeField, ValidationError, UUIDField,
     ListField, DictField, DocumentField, BooleanField, IntField, GenericField)
@@ -320,203 +319,193 @@ class TestDocument(unittest.TestCase):
         assert documents_registry[class_fqn] == Foo
 
 
-class TestRepository(unittest.TestCase):
-    connection_manager = ConnectionManager()
-    connection_manager.connect({'main': {
-        'name': 'master_common_test',
-        'args': ['127.0.0.1:27017']}})
-
+class TestCollection(unittest.TestCase):
     def setUp(self):
         class _TestModel(BaseDoc):
             field1 = StringField(required=True)
             field2 = DateTimeField(default=datetime.now)
-            meta = {
-                'indexes': [
-                    {
-                        'index': [('field2', 1), ],
-                        'background': True,
-                    },
-                    {
-                        'index': [('field1', 1), ('field2', -1), ],
-                        'background': True,
-                        'unique': True,
-                    }
-                ]
-            }
 
-        class _TestModelRepository(Repository):
-            _model_class = _TestModel
         self._TestModel = _TestModel
-        self._TestModelRepository = _TestModelRepository
-        self._TestModelRepository.remove()
+        self._TestModel.objects.indexes = [
+            {
+                'index': [('field2', 1), ],
+                'background': True,
+            },
+            {
+                'index': [('field1', 1), ('field2', -1), ],
+                'background': True,
+                'unique': True,
+            }
+        ]
+        self._TestModel.objects.remove()
         self._get_collection().drop_indexes()
 
     def _get_collection(self):
-        return self._TestModelRepository.get_collection()
+        return self._TestModel.objects.collection
 
     def create_doc(self, payload):
-        return self._TestModelRepository._model_class(**payload)
+        return self._TestModel.objects.model_class(**payload)
 
     def test_save_validate_ok(self):
         md = self._TestModel(field1='asasddsd')
-        self._TestModelRepository.save(md)
+        self._TestModel.objects.save(md)
         assert hasattr(md, '_id')
 
     def test_right_collection_should_be_used(self):
-        col_name = self._TestModelRepository._model_class.collection_name
-        assert col_name == 'testmodel'
+        col_name = self._TestModel.objects.collection_name
+        assert col_name == 'test_models'
 
     def test_save_validate_failed(self):
         md = self._TestModel()
-        self.assertRaises(ValidationError, self._TestModelRepository.save, md)
+        self.assertRaises(ValidationError, self._TestModel.objects.save, md)
 
     def test_create(self):
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        count = self._TestModelRepository.count()
+        count = self._TestModel.objects.count()
         assert count == 1
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        count = self._TestModelRepository.count()
+        count = self._TestModel.objects.count()
         assert count == 2
 
     def test_save_existing_doc(self):
-        document = self._TestModelRepository.create({
+        document = self._TestModel.objects.create({
             'field1': 'test_string'
         })
         document.field1 = 'test_string2'
-        count = self._TestModelRepository.count()
+        count = self._TestModel.objects.count()
         assert count == 1
-        self._TestModelRepository.save(document)
-        count = self._TestModelRepository.count()
+        self._TestModel.objects.save(document)
+        count = self._TestModel.objects.count()
         assert count == 1
         assert document.field1 == 'test_string2'
-        stored_doc = self._TestModelRepository.get(document.id)
+        stored_doc = self._TestModel.objects.get(document.id)
         assert stored_doc.field1 == 'test_string2'
 
     def test_insert(self):
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        count = self._TestModelRepository.count()
+        count = self._TestModel.objects.count()
         assert count == 1
 
-        self._TestModelRepository.insert(self.create_doc({
+        self._TestModel.objects.insert(self.create_doc({
             'field1': 'test_string'}))
-        assert self._TestModelRepository.count() == 2
+        assert self._TestModel.objects.count() == 2
 
-        self._TestModelRepository.insert([
+        self._TestModel.objects.insert([
             self.create_doc({'field1': 'test_string2'}),
             self.create_doc({'field1': 'test_string3'}),
         ])
-        assert self._TestModelRepository.count() == 4
+        assert self._TestModel.objects.count() == 4
 
     def test_find(self):
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        result = self._TestModelRepository.find().as_list()
+        result = self._TestModel.objects.find().as_list()
         assert len(result) == 3
 
     def test_find_with_projection(self):
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        result = self._TestModelRepository.find(fields={'field2': 1})
+        result = self._TestModel.objects.find(fields={'field2': 1})
         assert hasattr(result[0], 'field2')
         self.assertIsNone(result[0].field1)
 
     def test_find_slice(self):
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        result = self._TestModelRepository.find(skip=1, limit=2).as_list()
+        result = self._TestModel.objects.find(skip=1, limit=2).as_list()
         assert len(result) == 2
 
     def test_slice(self):
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        result = self._TestModelRepository.find()
+        result = self._TestModel.objects.find()
         assert len(result[1:3]) == 2
 
     def test_find_and_modify_found(self):
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        result = self._TestModelRepository.find_and_modify({
+        result = self._TestModel.objects.find_and_modify({
             'field1': 'test_string'}, {'$set': {'field1': 'updated'}})
         assert result.field1 == 'test_string'
-        object_in_db = self._TestModelRepository.get({'field1': 'updated'})
+        object_in_db = self._TestModel.objects.get({'field1': 'updated'})
         assert object_in_db.field1 == 'updated'
 
     def test_find_and_modify_not_found(self):
-        result = self._TestModelRepository.find_and_modify({
+        result = self._TestModel.objects.find_and_modify({
             'field1': 'test_string'}, {'$set': {'field1': 'updated'}})
         assert result is None
 
     def test_find_and_modify_new_true(self):
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        result = self._TestModelRepository.find_and_modify({
+        result = self._TestModel.objects.find_and_modify({
             'field1': 'test_string'}, {'$set': {'field1': 'updated'}},
             new=True)
         assert result.field1 == 'updated'
-        object_in_db = self._TestModelRepository.get({'field1': 'updated'})
+        object_in_db = self._TestModel.objects.get({'field1': 'updated'})
         assert object_in_db.field1 == 'updated'
 
     def test_remove_by_doc(self):
-        document = self._TestModelRepository.create({
+        document = self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        count = self._TestModelRepository.count()
+        count = self._TestModel.objects.count()
         assert count == 1
-        self._TestModelRepository.remove(document.id)
-        count = self._TestModelRepository.count()
+        self._TestModel.objects.remove(document.id)
+        count = self._TestModel.objects.count()
         assert count == 0
 
     def test_remove_by_id(self):
-        document = self._TestModelRepository.create({
+        document = self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        count = self._TestModelRepository.count()
+        count = self._TestModel.objects.count()
         assert count == 1
-        self._TestModelRepository.remove(document)
-        count = self._TestModelRepository.count()
+        self._TestModel.objects.remove(document)
+        count = self._TestModel.objects.count()
         assert count == 0
 
     def test_remove_by_spec(self):
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string'
         })
-        self._TestModelRepository.create({
+        self._TestModel.objects.create({
             'field1': 'test_string2'
         })
-        count = self._TestModelRepository.count()
+        count = self._TestModel.objects.count()
         assert count == 2
-        self._TestModelRepository.remove({'field1': 'test_string'})
-        count = self._TestModelRepository.count()
+        self._TestModel.objects.remove({'field1': 'test_string'})
+        count = self._TestModel.objects.count()
         assert count == 1
 
     def test_synchronization_index(self):
@@ -531,7 +520,7 @@ class TestRepository(unittest.TestCase):
             )
 
         def get_indexes():
-            indexes = self._TestModel.meta['indexes']
+            indexes = self._TestModel.objects.indexes
             return tuple(
                 (tuple(i['index']),
                  i['background'],
@@ -540,7 +529,7 @@ class TestRepository(unittest.TestCase):
             )
 
         def get_indexes_to_change():
-            indexes = self._TestModelRepository.synchronize_indexes()
+            indexes = self._TestModel.objects.synchronize_indexes()
             return (tuple(indexes['indexes_to_drop']),
                     tuple(indexes['indexes_to_ensure']))
 
@@ -561,74 +550,68 @@ class TestRepository(unittest.TestCase):
 
         assert set(get_index_infos()) == set(get_indexes())
 
-        self._TestModel.meta['indexes'][1]['index'][0] = ('field13', -1)
-        self._TestModel.meta['indexes'][1]['background'] = False
+        self._TestModel.objects.indexes[1]['index'][0] = ('field13', -1)
+        self._TestModel.objects.indexes[1]['background'] = False
         change = get_indexes_to_change()
         assert change == (('field1_1_field2_-1',), ('field13_-1_field2_-1',))
         assert set(get_index_infos()) == set(get_indexes())
 
     def test_ttl(self):
-        self._TestModelRepository.synchronize_indexes()
+        self._TestModel.objects.synchronize_indexes()
 
         self._TestModel.field1 = DateTimeField
-        self._TestModel.meta['indexes'][1]['expire_after_seconds'] = 1
-        try:
-            self._TestModelRepository.synchronize_indexes()
-            raise Exception
-        except Exception as ex:
-            assert type(ex) == TypeError
+        self._TestModel.objects.indexes[1]['expire_after_seconds'] = 1
+        with pytest.raises(TypeError):
+            self._TestModel.objects.synchronize_indexes()
 
-        self._TestModel.meta['indexes'][1].pop('expire_after_seconds')
-        self._TestModelRepository.synchronize_indexes()
+        self._TestModel.objects.indexes[1].pop('expire_after_seconds')
+        self._TestModel.objects.synchronize_indexes()
 
-        self._TestModel.meta['indexes'][0]['expire_after_seconds'] = '1'
-        try:
-            self._TestModelRepository.synchronize_indexes()
-            raise Exception
-        except Exception as ex:
-            assert type(ex) == TypeError
+        self._TestModel.objects.indexes[0]['expire_after_seconds'] = '1'
+        with pytest.raises(TypeError):
+            self._TestModel.objects.synchronize_indexes()
 
-        self._TestModel.meta['indexes'][0]['expire_after_seconds'] = 1
+        self._TestModel.objects.indexes[0]['expire_after_seconds'] = 1
         self._TestModel.field2 = StringField
 
         try:
-            self._TestModelRepository.synchronize_indexes()
+            self._TestModel.objects.synchronize_indexes()
             raise Exception
         except Exception as ex:
             assert type(ex) == TypeError
 
     def test_unique(self):
-        self._TestModelRepository.synchronize_indexes()
+        self._TestModel.objects.synchronize_indexes()
 
         dt = datetime.utcnow()
         dt2 = dt + timedelta(days=1)
 
-        self._TestModelRepository.create(dict(
+        self._TestModel.objects.create(dict(
             field1='1', field2=dt
         ))
-        self._TestModelRepository.create(dict(
+        self._TestModel.objects.create(dict(
             field1='2', field2=dt
         ))
-        self._TestModelRepository.create(dict(
+        self._TestModel.objects.create(dict(
             field1='1', field2=dt2
         ))
-        self._TestModelRepository.create(dict(
+        self._TestModel.objects.create(dict(
             field1='2', field2=dt2
         ))
 
         with pytest.raises(DuplicateKeyError):
-            self._TestModelRepository.create(dict(
+            self._TestModel.objects.create(dict(
                 field1='1', field2=dt
             ))
 
-        self._TestModel.meta['indexes'][1]['unique'] = False
-        self._TestModelRepository.synchronize_indexes()
+        self._TestModel.objects.indexes[1]['unique'] = False
+        self._TestModel.objects.synchronize_indexes()
 
-        self._TestModelRepository.create(dict(
+        self._TestModel.objects.create(dict(
             field1='3', field2=dt
         ))
 
-        self._TestModelRepository.create(dict(
+        self._TestModel.objects.create(dict(
             field1='3', field2=dt
         ))
 
@@ -643,10 +626,7 @@ class TestRepository(unittest.TestCase):
             list_field = ListField(DocumentField(ITD))
             model_field = DocumentField(ITD)
 
-        class TDRepository(Repository):
-            _model_class = TD
-
-        td = TDRepository.create({
+        td = TD.objects.create({
             'dict_field': {'1': {'int_field': 1, 'string_field': '2'}},
             'list_field': [{'int_field': 3, 'string_field': '4'}],
             'model_field': {'int_field': 5, 'string_field': '6'}
@@ -655,33 +635,6 @@ class TestRepository(unittest.TestCase):
         assert isinstance(td.dict_field['1'], ITD)
         assert isinstance(td.list_field[0], ITD)
         assert isinstance(td.model_field, ITD)
-
-
-class TestInjectRepository(unittest.TestCase):
-
-    def setUp(self):
-        class _TestModel(BaseDoc):
-            field1 = StringField(required=True)
-            field2 = DateTimeField(default=datetime.now)
-
-        class _TestModelRepository(Repository):
-            _model_class = _TestModel
-
-        class _TestModelRepository2(Repository):
-            _model_class = _TestModel
-
-        self._TestModel = _TestModel
-        self._TestModelRepository = _TestModelRepository
-        self._TestModelRepository2 = _TestModelRepository2
-
-    def test_injected(self):
-        inject_repositories([self._TestModelRepository])
-        assert self._TestModel.objects == self._TestModelRepository
-
-    def test_reinjected(self):
-        inject_repositories([self._TestModelRepository])
-        inject_repositories([self._TestModelRepository2])
-        assert self._TestModel.objects == self._TestModelRepository2
 
 
 class TestInheritance(unittest.TestCase):
@@ -704,56 +657,53 @@ class TestInheritance(unittest.TestCase):
             choices_field3 = StringField(choices=ContactStatus)
             simple_field3 = StringField()
 
-        class TD3Repository(Repository):
-            _model_class = TD3
-
         self.TD3 = TD3
-        self.TD3Repository = TD3Repository
-        self.TD3Repository.remove()
-        self.TD3Repository.get_collection().drop_indexes()
+        self.TD3Collection = TD3.objects
+        self.TD3Collection.remove()
+        self.TD3Collection.collection.drop_indexes()
 
     def test_correct_save_required_fields(self):
-        self.TD3Repository.create({
+        self.TD3Collection.create({
             'required_field1': 'test_string1',
             'required_field2': 'test_string2',
             'required_field3': 'test_string3'
         })
-        td = self.TD3Repository.get()
+        td = self.TD3Collection.get()
         assert td.required_field1 == 'test_string1'
         assert td.required_field2 == 'test_string2'
         assert td.required_field3 == 'test_string3'
 
     def test_incorrect_save_required_fields(self):
         with self.assertRaises(ValidationError):
-            self.TD3Repository.create({})
+            self.TD3Collection.create({})
         with self.assertRaises(ValidationError):
-            self.TD3Repository.create({'required_field1': 'test_string1'})
+            self.TD3Collection.create({'required_field1': 'test_string1'})
         with self.assertRaises(ValidationError):
-            self.TD3Repository.create({
+            self.TD3Collection.create({
                 'required_field1': 'test_string1',
                 'required_field2': 'test_string2'})
         with self.assertRaises(ValidationError):
-            self.TD3Repository.create({
+            self.TD3Collection.create({
                 'required_field2': 'test_string2',
                 'required_field3': 'test_string3'})
         with self.assertRaises(ValidationError):
-            self.TD3Repository.create({
+            self.TD3Collection.create({
                 'required_field1': 'test_string1',
                 'required_field3': 'test_string3'})
 
     def test_correct_save_default_value_to_default_fields(self):
-        self.TD3Repository.create({
+        self.TD3Collection.create({
             'required_field1': 'test_string1',
             'required_field2': 'test_string2',
             'required_field3': 'test_string3'
         })
-        td = self.TD3Repository.get()
+        td = self.TD3Collection.get()
         assert td.default_field1 == 'df1'
         assert td.default_field2 == 'df2'
         assert td.default_field3 == 'df3'
 
     def test_correct_save_random_value_to_default_fields(self):
-        self.TD3Repository.create({
+        self.TD3Collection.create({
             'required_field1': 'test_string1',
             'required_field2': 'test_string2',
             'required_field3': 'test_string3',
@@ -761,13 +711,13 @@ class TestInheritance(unittest.TestCase):
             'default_field2': 'ty2',
             'default_field3': 'ty3',
         })
-        td = self.TD3Repository.get()
+        td = self.TD3Collection.get()
         assert td.default_field1 == 'ty1'
         assert td.default_field2 == 'ty2'
         assert td.default_field3 == 'ty3'
 
     def test_correct_save_choices_fields(self):
-        self.TD3Repository.create({
+        self.TD3Collection.create({
             'required_field1': 'test_string1',
             'required_field2': 'test_string2',
             'required_field3': 'test_string3',
@@ -775,14 +725,14 @@ class TestInheritance(unittest.TestCase):
             'choices_field2': ContactStatus.Failed,
             'choices_field3': ContactStatus.Awaiting,
         })
-        td = self.TD3Repository.get()
+        td = self.TD3Collection.get()
         assert td.choices_field1 == ContactStatus.Done
         assert td.choices_field2 == ContactStatus.Failed
         assert td.choices_field3 == ContactStatus.Awaiting
 
     def test_incorrect_save_choices_fields(self):
         with self.assertRaises(ValidationError):
-            self.TD3Repository.create({
+            self.TD3Collection.create({
                 'required_field1': 'test_string1',
                 'required_field2': 'test_string2',
                 'required_field3': 'test_string3',
@@ -791,7 +741,7 @@ class TestInheritance(unittest.TestCase):
                 'choices_field3': ContactStatus.Awaiting,
             })
         with self.assertRaises(ValidationError):
-            self.TD3Repository.create({
+            self.TD3Collection.create({
                 'required_field1': 'test_string1',
                 'required_field2': 'test_string2',
                 'required_field3': 'test_string3',
@@ -800,7 +750,7 @@ class TestInheritance(unittest.TestCase):
                 'choices_field3': ContactStatus.Awaiting,
             })
         with self.assertRaises(ValidationError):
-            self.TD3Repository.create({
+            self.TD3Collection.create({
                 'required_field1': 'test_string1',
                 'required_field2': 'test_string2',
                 'required_field3': 'test_string3',
@@ -810,7 +760,7 @@ class TestInheritance(unittest.TestCase):
             })
 
     def test_correct_save_simple_fields(self):
-        self.TD3Repository.create({
+        self.TD3Collection.create({
             'required_field1': 'test_string1',
             'required_field2': 'test_string2',
             'required_field3': 'test_string3',
@@ -818,7 +768,7 @@ class TestInheritance(unittest.TestCase):
             'simple_field2': 'ty2',
             'simple_field3': 'ty3',
         })
-        td = self.TD3Repository.get()
+        td = self.TD3Collection.get()
         assert td.simple_field1 == 'ty1'
         assert td.simple_field2 == 'ty2'
         assert td.simple_field3 == 'ty3'

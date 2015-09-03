@@ -11,7 +11,7 @@ Ognom is object-to-document mapper for `mongodb <https://www.mongodb.org>`_. Cur
 but you can easily implement your own backend based on another driver (for example `asyncio-mongo <https://pypi.python.org/pypi/asyncio_mongo>`_) if needed, 
 as serialization and storage logic in ognom are separated.
  
-Supports python2.6+, python3.3+, PyPy. 
+Supports python2.7+, python3.3+, PyPy. 
 
 Documentation:  #TODO
 
@@ -42,8 +42,7 @@ Quickstart
 
 .. code-block:: python
 
-    from ognom.base import (ConnectionManager, Document, Repository, 
-        inject_repositories)
+    from ognom.base import ConnectionManager, Document, Collection
     from ognom.fields import StringField, IntField
     
     ConnectionManager.connect({
@@ -54,25 +53,15 @@ Quickstart
 
 
     class Foo(Document):
-        db_name = 'main'  # db alias
-        _collection_name = 'my_foos'  # collection name (by default 'foos')
+        objects = Collection(
+            db_name='main'
+            collection_name='my_foos'  # collection name (by default 'foos')
+            indexes=[{
+                'index': [('bar', 1), ('baz', -1)],
+                'background': True}])
     
-        meta = {
-            'indexes': [
-                {
-                    'index': [('bar', 1), ('baz', -1)],
-                    'background': True,
-                },
-            ]
-        }
-        
         bar = StringField(required=True, default='baaar')
         baz = IntField(choices=[10, 20, 30, 40, 50])
-
-    class FooRep(Repository):
-        _model_class = Foo
-        
-    inject_repositories([FooRep])  # weird part, will be removed soon
 
 
     foo1 = Foo.objects.create({'bar': 'lalala'})

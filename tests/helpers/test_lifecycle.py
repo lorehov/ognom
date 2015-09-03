@@ -1,22 +1,18 @@
 import unittest
 from datetime import datetime
 
-from ognom.base import Repository, inject_repositories
+from ognom.base import Collection
 from ognom.fields import StringField
 from ognom.helpers.lifecycle import DocWithLifeCycle
 
 
 class FooDoc(DocWithLifeCycle):
-    db_name = 'main'
-    _collection_name = 'testmodel'
+    objects = Collection(
+        db_name='main',
+        collection_name='testmodel'
+    )
 
     bar = StringField()
-
-
-class FooRep(Repository):
-    _model_class = FooDoc
-
-inject_repositories([FooRep])
 
 
 class TestLifeCycleMixin(unittest.TestCase):
