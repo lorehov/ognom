@@ -322,4 +322,3 @@ class Collection(object):
                     list(index.spec), **index_opts)
                 result['indexes_to_ensure'].append(res_ind)
         return result
-
