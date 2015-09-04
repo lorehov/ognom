@@ -201,4 +201,3 @@ class Document(with_metaclass(MongoDocumentMeta, object)):
 
     class DoesNotExist(Exception):
         pass
-
