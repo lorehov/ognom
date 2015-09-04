@@ -3,7 +3,7 @@ import re
 import sys
 import uuid
 import datetime
-from decimal import Decimal
+import decimal
 
 import six
 from bson import ObjectId
@@ -123,7 +123,7 @@ class IntField(GenericField):
 class FloatField(GenericField):
     def validate(self, value):
         super(FloatField, self).validate(value)
-        if not isinstance(value, (float, Decimal, six.integer_types)):
+        if not isinstance(value, (float, decimal.Decimal, six.integer_types)):
             raise ValidationError(
                 '[{}] Can\'t convert {} of type {} to float'.format(
                     self.name, value, type(value)), self.name)
@@ -135,7 +135,9 @@ class FloatField(GenericField):
 class DecimalField(GenericField):
     def validate(self, value):
         super(DecimalField, self).validate(value)
-        if not isinstance(value, Decimal):
+        try:
+            decimal.Decimal(value)
+        except decimal.InvalidOperation:
             raise ValidationError(
                 '[{}] Can\'t convert {} of type {} to Decimal'.format(
                     self.name, value, type(value)), self.name)
@@ -144,7 +146,7 @@ class DecimalField(GenericField):
         return six.text_type(value)
 
     def from_mongo(self, value):
-        return Decimal(value)
+        return decimal.Decimal(value)
 
 
 class UUIDField(GenericField):

@@ -87,6 +87,20 @@ class TestDecimalField(unittest.TestCase):
         value = self.field.from_mongo('3.1415926535897932384')
         assert value == Decimal('3.1415926535897932384')
 
-    def test_should_accept_only_decimal(self):
-        with pytest.raises(ValidationError):
-            self.field.validate(10)
+    def test_validate_non_compatible_decimals(self):
+        wrong_values = [
+            'string',
+            '1/2',
+        ]
+        for value in wrong_values:
+            self.assertRaises(ValidationError, self.field.validate, value)
+
+    def test_validate_regular_url(self):
+        valid_urls = [
+            1,
+            50.51,
+            Decimal('1'),
+            Decimal('50.51'),
+        ]
+        for url in valid_urls:
+            self.assertIsNone(self.field.validate(url))
