@@ -76,3 +76,10 @@ Quickstart
     foos = Foo.objects.find({'bar': 'lalala'})  # not list but CursorWrapper!
     assert len(list(foos)) == 1
     
+
+Contributors
+------------
+
+* Lev Orekhov `@lorehov <https://github.com/lorehov>`_
+* Michael Elovskikh `@wronglink <https://github.com/wronglink>`_
+* Sardnej `@sardnej <https://github.com/sardnej>`_

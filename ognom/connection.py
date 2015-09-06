@@ -71,4 +71,3 @@ class ConnectionManager(object):
             return MongoReplicaSetClient(*args, **kwargs)
         else:
             return MongoClient(*args, **kwargs)
-
