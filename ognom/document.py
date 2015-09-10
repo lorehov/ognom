@@ -8,6 +8,10 @@ from ognom.fields import GenericField, ObjectIdField, ValidationError
 from ognom._registry import register_doc_class
 
 
+class ObjectDoesNotExist(Exception):
+    pass
+
+
 class MongoDocumentMeta(type):
     def __new__(cls, class_name, bases, dct):
         result_cls = type.__new__(cls, class_name, bases, dct)
@@ -18,6 +22,8 @@ class MongoDocumentMeta(type):
         result_cls._defaults = {}
         result_cls._choices = {}
         result_cls._required = set()
+        result_cls.DoesNotExist = type(
+            str('DoesNotExist'), (ObjectDoesNotExist,), {})
 
         # in order to support inheritance
         special_attrs = [
@@ -54,6 +60,7 @@ class Document(with_metaclass(MongoDocumentMeta, object)):
     _required = None
     _defaults = None
     _choices = None
+    DoesNotExist = None
 
     objects = None  # repository can be injected here
 
@@ -198,6 +205,3 @@ class Document(with_metaclass(MongoDocumentMeta, object)):
         if self.id is None:
             raise TypeError('Documents without id are unhashable')
         return hash(self.id)
-
-    class DoesNotExist(Exception):
-        pass
