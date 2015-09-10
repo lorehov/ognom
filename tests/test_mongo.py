@@ -9,6 +9,8 @@ import pytest
 from bson.objectid import ObjectId
 from pymongo.errors import DuplicateKeyError
 from six import string_types
+from ognom.collection import Collection
+from ognom.document import ObjectDoesNotExist
 
 from ognom.validators import EmailValidator
 from ognom.fields import (
@@ -317,6 +319,23 @@ class TestDocument(unittest.TestCase):
             inspect.getmodule(Foo).__name__, Foo.__name__)
         assert class_fqn in documents_registry
         assert documents_registry[class_fqn] == Foo
+
+    def test_does_not_exist_exception(self):
+        class TD1(BaseDoc):
+            objects = Collection(db_name='main', collection_name='test_models1')
+
+        class TD2(BaseDoc):
+            objects = Collection(db_name='main', collection_name='test_models2')
+
+        self.assertRaises(TD1.DoesNotExist, TD1.objects.get_or_raise, ObjectId())
+        self.assertRaises(ObjectDoesNotExist, TD1.objects.get_or_raise, ObjectId())
+        try:
+            TD1.objects.get_or_raise(ObjectId())
+        except TD2.DoesNotExist:
+            self.fail("Collection raised DoesNotExist wrong exception")
+        except TD1.DoesNotExist:
+            # Right exception is raised
+            assert True
 
 
 class TestCollection(unittest.TestCase):
