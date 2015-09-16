@@ -15,5 +15,12 @@ def register_doc_class(doc_cls):
 
 def get_doc_class(doc_name):
     if doc_name not in documents_registry:
-        raise NoDocumentClassError(doc_name)
+        try:
+            full_path = doc_name.split('.')
+            module_path = '.'.join(full_path[:-1])
+            cls_name = full_path[-1]
+            module = __import__(module_path, {}, {}, [cls_name])
+            documents_registry[doc_name] = getattr(module, cls_name)
+        except ImportError:
+            raise NoDocumentClassError(doc_name)
     return documents_registry[doc_name]

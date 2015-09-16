@@ -1,21 +1,7 @@
 import unittest
 from decimal import Decimal
 
-import pytest
-
-from ognom.fields import (
-    DocumentField, URLField, ValidationError, HTTPField, DecimalField)
-from tests.common import BaseDoc
-
-
-class TestDocumentField(unittest.TestCase):
-    def test_should_accept_document_class_as_model_class(self):
-        field = DocumentField(BaseDoc)
-        assert field.model_class == BaseDoc
-
-    def test_should_accept_string_as_model_class(self):
-        field = DocumentField('tests.common.BaseDoc')
-        assert field.model_class == BaseDoc
+from ognom.fields import URLField, ValidationError, HTTPField, DecimalField
 
 
 class TestURLField(unittest.TestCase):
