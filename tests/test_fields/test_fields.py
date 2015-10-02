@@ -1,7 +1,8 @@
 import unittest
 from decimal import Decimal
+from datetime import datetime
 
-from ognom.fields import URLField, ValidationError, HTTPField, DecimalField
+from ognom.fields import URLField, ValidationError, HTTPField, DecimalField, DateTimeField
 
 
 class TestURLField(unittest.TestCase):
@@ -90,3 +91,18 @@ class TestDecimalField(unittest.TestCase):
         ]
         for url in valid_urls:
             self.assertIsNone(self.field.validate(url))
+
+
+class TestDateTimeField(unittest.TestCase):
+    def setUp(self):
+        self.field = DateTimeField()
+
+    def test_parse_datetime(self):
+        valid_values = (
+            datetime(2015, 1, 2, 3, 4, 5),
+            '2015-01-02 03:04:05',
+            '2015-01-02T03:04:05.45Z',
+        )
+
+        for value in valid_values:
+            self.assertIsNone(self.field.validate(value))
