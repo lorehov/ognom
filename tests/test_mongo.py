@@ -130,7 +130,25 @@ class TestDocument(unittest.TestCase):
         result = td.to_mongo()
         assert result['field1'] == {'field1': 'test_string'}
 
-    def test_list_of_document_field_to_mongo(self):
+    def test_document_field_from_mongo(self):
+        class ITD(BaseDoc):
+            field1 = StringField(default='test_string')
+            field2 = StringField()
+
+        class TD(BaseDoc):
+            doc_field = DocumentField(ITD)
+
+        result = TD.from_mongo({'doc_field': {}})
+        assert isinstance(result.doc_field, ITD)
+        assert result.doc_field.field1 == 'test_string'
+        assert result.doc_field.field2 is None
+
+        result = TD.from_mongo({'doc_field': {'field1': 'a', 'field2': 'b'}})
+        assert isinstance(result.doc_field, ITD)
+        assert result.doc_field.field1 == 'a'
+        assert result.doc_field.field2 == 'b'
+
+    def test_list_of_document_fields_to_mongo(self):
         class ITD(BaseDoc):
             field1 = StringField(default='ts')
 
@@ -142,7 +160,7 @@ class TestDocument(unittest.TestCase):
             result['field1'],
             [{'field1': 'ts'}, {'field1': 'ts'}, {'field1': 'ts'}])
 
-    def test_dict_of_document_field_to_mongo(self):
+    def test_dict_of_document_fields_to_mongo(self):
         class ITD(BaseDoc):
             field1 = StringField(default='ts')
 
@@ -194,6 +212,13 @@ class TestDocument(unittest.TestCase):
     def test_from_mongo(self):
         class TD(BaseDoc):
             field1 = StringField()
+
+        td = TD.from_mongo(None)
+        assert td is None
+
+        td = TD.from_mongo({})
+        assert td.field1 is None
+
         td = TD.from_mongo({'field1': 'test_string'})
         assert td.field1 == 'test_string'
 

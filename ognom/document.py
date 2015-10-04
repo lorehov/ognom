@@ -142,15 +142,15 @@ class Document(with_metaclass(MongoDocumentMeta, object)):
 
     @classmethod
     def from_mongo(cls, payload):
-        instance = None
-        if payload:
-            instance = cls()
-            for key, value in payload.items():
-                attribute = getattr(instance.__class__, key, None)
-                if attribute and hasattr(attribute, 'from_mongo'):
-                    setattr(instance, key, attribute.from_mongo(value))
-                elif key == '_id' and value:
-                    setattr(instance, key, value)
+        if payload is None:
+            return None
+        instance = cls()
+        for key, value in payload.items():
+            attribute = getattr(instance.__class__, key, None)
+            if attribute and hasattr(attribute, 'from_mongo'):
+                setattr(instance, key, attribute.from_mongo(value))
+            elif key == '_id' and value:
+                setattr(instance, key, value)
         return instance
 
     @classmethod
