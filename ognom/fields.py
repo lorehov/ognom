@@ -198,7 +198,6 @@ class DateTimeField(GenericField):
                 raise ValidationError(
                     '[{}] Unable to convert {} to datetime: {}'.format(
                         self.name, value, repr(ex)))
-        return True
 
     def to_mongo(self, value):
         if value is None:

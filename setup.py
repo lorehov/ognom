@@ -47,8 +47,8 @@ setup(
     version=__version__,
     packages=find_packages(),
 
-    tests_require=['pytest', 'pymongo', 'six'],
-    install_requires=['pymongo', 'six'],
+    tests_require=['pytest'],
+    install_requires=['pymongo<3.0', 'python-dateutil', 'six'],
     cmdclass={'test': PyTest},
 
     keywords='mongo mongodb pymongo orm odm',
