@@ -1,10 +1,14 @@
 ognom
 =====
 
-.. image:: https://travis-ci.org/lorehov/ognom.png
+.. image:: https://travis-ci.org/lorehov/ognom.svg
     :target: https://travis-ci.org/lorehov/ognom
     :alt: Build Status
-    
+
+.. image:: https://img.shields.io/pypi/v/ognom.svg
+    :target: https://pypi.python.org/pypi/ognom
+    :alt: Latest Version
+
 Documentation:  #TODO
 
 Ognom is object-to-document mapper for `mongodb <https://www.mongodb.org>`_. Currently ognom uses `pymongo <https://api.mongodb.org/python/current/>`_ as default backend, 

@@ -198,7 +198,6 @@ class DateTimeField(GenericField):
                 raise ValidationError(
                     '[{}] Unable to convert {} to datetime: {}'.format(
                         self.name, value, repr(ex)))
-        return True
 
     def to_mongo(self, value):
         if value is None:
@@ -353,7 +352,9 @@ class DocumentField(GenericField):
         return value.jsonify()
 
     def from_mongo(self, payload):
-        return self.model_class(**payload) if payload else None
+        if payload is None:
+            return None
+        return self.model_class(**payload)
 
     def from_json(self, value):
         return self.model_class.from_json(value)
