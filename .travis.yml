@@ -6,9 +6,14 @@ env:
     - TOXENV=py27
     - TOXENV=py33
     - TOXENV=py34
-    - TOXENV=py35
     - TOXENV=pypy
     - TOXENV=pep8
+
+matrix:
+    include:
+        - python: 3.5
+          env:
+              - TOXENV=py35
 
 branches:
     only:
