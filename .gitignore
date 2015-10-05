@@ -1,6 +1,7 @@
 # common
 *.py[cod]
 .idea
+.DS_Store
 
 # Packages
 *.egg
